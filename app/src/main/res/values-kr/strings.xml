@@ -1,0 +1,41 @@
+<resources>
+    <string name="app_name">캠프메이트</string>
+
+    <string name="login">로그인</string>
+    <string name="signup">회원가입</string>
+    <string name="email">이메일</string>
+    <string name="password">비밀번호</string>
+    <string name="name">이름</string>
+    <string name="phone_number">전화번호</string>
+    <string name="signup_success_message">회원가입 성공! 로그인 해주세요.</string>
+    <string name="login_success_message">로그인 성공!</string>
+    <string name="login_failed_message">로그인 실패</string>
+    <string name="signup_failed_message">회원가입 실패</string>
+
+    <string name="bottom_nav_home">홈</string>
+    <string name="bottom_nav_checklist">체크리스트</string>
+    <string name="bottom_nav_mypage">마이페이지</string>
+
+    <string name="mypage_my_reservations">나의 예약 현황</string>
+    <string name="mypage_my_reviews">내가 작성한 리뷰</string>
+    <string name="mypage_logout">로그아웃</string> <string name="mypage_no_reservations">예약 내역이 없습니다.</string>
+    <string name="check_in">체크인</string>
+    <string name="check_out">체크아웃</string>
+    <string name="reserved_guests">예약 인원</string>
+
+    <string name="loading">로딩중…</string>
+    <string name="select_date">날짜 선택</string>
+    <string name="select_site">사이트 선택</string>
+    <string name="select_guests">인원 선택</string>
+    <string name="reserve">예약하기</string>
+    <string name="reservation_complete_message">예약되었습니다! (테스트)</string>
+    <string name="please_select_date_and_site">날짜와 사이트를 선택해주세요.</string>
+    <string name="back">뒤로가기</string>
+    <string name="adult">성인</string>
+    <string name="child">미취학 아동</string>
+    <string name="ok">확인</string>
+    <string name="cancel">취소</string>
+    <string name="nightly_price">1박:</string>
+    <string name="remove">제거</string>
+    <string name="add">추가</string>
+</resources>
