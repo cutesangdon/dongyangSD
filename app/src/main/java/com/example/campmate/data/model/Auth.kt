@@ -4,21 +4,19 @@ import com.google.gson.annotations.SerializedName
 // 로그인 요청 Body
 data class LoginRequest(
     @SerializedName("customerId")
-    val customerId: String,
+    val email: String,
 
-    @SerializedName("password")
+    @SerializedName("customerPassword")
     val pass: String
 )
 
 // 로그인 응답 Body
 data class LoginResponse(
-    @SerializedName("userName")
-    val name: String,
-
-    @SerializedName("accessToken")
+    @SerializedName("token")
     val token: String
 )
 
+// 회원가입 요청 Body
 data class SignupRequest(
     @SerializedName("customerId")
     val customerId: String,
@@ -29,7 +27,6 @@ data class SignupRequest(
     @SerializedName("email")
     val email: String,
 
-    // DB의 customers_name은 닉네임으로 사용됩니다.
     @SerializedName("nickname")
     val name: String,
 
@@ -42,5 +39,6 @@ data class SignupRequest(
     @SerializedName("customersType")
     val type: String,
 
-    val provider: String = "NORMAL"
+    val provider: String = "CampMate"
 )
+

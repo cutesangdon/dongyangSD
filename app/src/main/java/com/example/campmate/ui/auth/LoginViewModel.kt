@@ -28,13 +28,11 @@ class LoginViewModel @Inject constructor(
     private val _loginState = MutableStateFlow<LoginUiState>(LoginUiState.Idle)
     val loginState: StateFlow<LoginUiState> = _loginState
 
-    // ✅ [수정] 파라미터 이름을 idInput -> customerId로 더 명확하게 변경
-    fun login(customerId: String, pass: String) {
+    fun login(email: String, pass: String) {
         viewModelScope.launch {
             _loginState.value = LoginUiState.Loading
             try {
-                // ✅✅✅ [해결] LoginRequest의 파라미터 이름을 'id'에서 'customerId'로 수정합니다. ✅✅✅
-                val response = apiService.login(LoginRequest(customerId = customerId, pass = pass))
+                val response = apiService.login(LoginRequest(email = email, pass = pass))
 
                 if (response.isSuccessful && response.body() != null) {
                     val token = response.body()!!.token
@@ -53,3 +51,4 @@ class LoginViewModel @Inject constructor(
         }
     }
 }
+
