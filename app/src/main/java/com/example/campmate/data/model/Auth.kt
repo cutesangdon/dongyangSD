@@ -1,41 +1,46 @@
-// com.forestteam.campmate.data.model.Auth.kt
-
 package com.example.campmate.data.model
 import com.google.gson.annotations.SerializedName
 
 // 로그인 요청 Body
 data class LoginRequest(
-    @SerializedName("customerEmail") // JSON으로 보낼 때 사용할 key 이름
-    val email: String,
+    @SerializedName("customerId")
+    val customerId: String,
 
-    @SerializedName("customerPass")
+    @SerializedName("password")
     val pass: String
 )
 
 // 로그인 응답 Body
 data class LoginResponse(
-    val token: String,
-    val user: User
-)
-
-// 회원가입 요청 Body
-data class SignupRequest(
-    @SerializedName("customerEmail")
-    val email: String,
-
-    @SerializedName("customerPass")
-    val pass: String,
-
-    @SerializedName("customerName")
+    @SerializedName("userName")
     val name: String,
 
-    @SerializedName("customerTel")
-    val tel: String
+    @SerializedName("accessToken")
+    val token: String
 )
 
-// 유저 정보
-data class User(
-    val id: Int,
+data class SignupRequest(
+    @SerializedName("customerId")
+    val customerId: String,
+
+    @SerializedName("password")
+    val pass: String,
+
+    @SerializedName("email")
     val email: String,
-    val name: String
+
+    // DB의 customers_name은 닉네임으로 사용됩니다.
+    @SerializedName("nickname")
+    val name: String,
+
+    @SerializedName("customersStyle")
+    val style: String,
+
+    @SerializedName("customersBackground")
+    val background: String,
+
+    @SerializedName("customersType")
+    val type: String,
+
+    val provider: String = "NORMAL"
 )

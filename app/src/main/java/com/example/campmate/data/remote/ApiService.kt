@@ -18,7 +18,6 @@ interface ApiService {
     @POST("customer/signup")
     suspend fun signup(@Body request: SignupRequest): Response<Unit>
 
-    // ✅ [수정됨] 추천 API 대신, 모든 캠핑장 목록을 가져오는 API를 호출합니다.
     @GET("campsites")
     suspend fun getAllCampsites(): Response<List<Campsite>>
 

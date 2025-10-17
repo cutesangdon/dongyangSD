@@ -18,6 +18,7 @@ class ChecklistViewModel @Inject constructor() : ViewModel() {
     val items: StateFlow<List<ChecklistItem>> = _items.asStateFlow()
 
     init {
+        // 초기 데이터 (필요 시 유지)
         _items.value = listOf(
             ChecklistItem(1, "텐트", true),
             ChecklistItem(2, "침낭", false),
@@ -37,6 +38,13 @@ class ChecklistViewModel @Inject constructor() : ViewModel() {
             currentList.map { item ->
                 if (item.id == itemId) item.copy(isChecked = !item.isChecked) else item
             }
+        }
+    }
+
+    fun removeCheckedItems() {
+        _items.update { currentList ->
+            // isChecked가 false인 아이템만 남기고 나머지는 필터링(삭제)합니다.
+            currentList.filter { !it.isChecked }
         }
     }
 }

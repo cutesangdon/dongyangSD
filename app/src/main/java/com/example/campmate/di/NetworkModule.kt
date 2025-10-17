@@ -16,13 +16,8 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // 안드로이드 에뮬레이터가 자신의 호스트 PC(localhost)를 가리키는 특수 주소입니다.
     private const val BASE_URL = "http://10.0.2.2:8080/"
 
-    /**
-     * OkHttpClient를 제공합니다.
-     * 이 클라이언트는 모든 네트워크 요청을 가로채는 인터셉터들을 포함합니다.
-     */
     @Provides
     @Singleton
     fun provideOkHttpClient(
