@@ -39,6 +39,6 @@ data class SignupRequest(
     @SerializedName("customersType")
     val type: String,
 
-    val provider: String = "CampMate"
+    val provider: String = "NORMAL"
 )
 
