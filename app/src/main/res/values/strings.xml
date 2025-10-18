@@ -13,7 +13,8 @@
     <string name="signup_failed_message">회원가입 실패</string>
 
     <string name="bottom_nav_home">홈</string>
-    <string name="bottom_nav_checklist">체크리스트</string>
+    <string name="bottom_nav_weather">날씨</string>
+    <string name="bottom_nav_community">커뮤니티</string>
     <string name="bottom_nav_mypage">마이페이지</string>
 
     <string name="mypage_my_reservations">나의 예약 현황</string>
