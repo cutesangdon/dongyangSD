@@ -12,30 +12,30 @@ class TokenManager @Inject constructor(@ApplicationContext context: Context) {
 
     companion object {
         private const val USER_TOKEN = "user_token"
-        private const val USER_NUMERIC_ID = "user_numeric_id"
+        private const val USER_ID = "user_id" // 사용자 숫자 ID를 저장할 키
     }
 
     fun saveAuthData(token: String, userId: Long) {
-        val editor = prefs.edit()
-        editor.putString(USER_TOKEN, token)
-        editor.putLong(USER_NUMERIC_ID, userId)
-        editor.apply()
+        prefs.edit()
+            .putString(USER_TOKEN, token)
+            .putLong(USER_ID, userId)
+            .apply()
     }
 
     fun getToken(): String? {
         return prefs.getString(USER_TOKEN, null)
     }
 
-    fun getUserId(): Long {
-        // ID가 없을 경우 -1을 반환 (오류 식별용)
-        return prefs.getLong(USER_NUMERIC_ID, -1L)
+    fun getUserId(): Long? {
+        val id = prefs.getLong(USER_ID, -1L)
+        return if (id == -1L) null else id
     }
 
     fun clearAuthData() {
-        val editor = prefs.edit()
-        editor.remove(USER_TOKEN)
-        editor.remove(USER_NUMERIC_ID)
-        editor.apply()
+        prefs.edit()
+            .remove(USER_TOKEN)
+            .remove(USER_ID)
+            .apply()
     }
 }
 

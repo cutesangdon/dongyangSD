@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -38,6 +36,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.campmate.data.model.ChecklistItem
 
+/**
+ * 체크리스트 전체를 보여주고 관리하는 다이얼로그 Composable
+ */
 @Composable
 fun ChecklistDialog(
     onDismiss: () -> Unit,
@@ -45,10 +46,13 @@ fun ChecklistDialog(
 ) {
     val items by viewModel.items.collectAsState()
     val presets by viewModel.presets.collectAsState()
-    val isLoadingPresets by viewModel.isLoadingPresets.collectAsState() // 로딩 상태 구독
-
     var showAddItemDialog by remember { mutableStateOf(false) }
     var showPresetDialog by remember { mutableStateOf(false) }
+
+    // ✅✅✅ [해결] 이전에 오류가 발생했던 부분입니다. ✅✅✅
+    // viewModel.isLoadingPresets -> viewModel.isLoading 으로 수정합니다.
+    val isLoadingPresets by viewModel.isLoading.collectAsState()
+
 
     if (showAddItemDialog) {
         AddItemDialog(
@@ -63,8 +67,8 @@ fun ChecklistDialog(
     if (showPresetDialog) {
         PresetDialog(
             presets = presets,
-            isLoading = isLoadingPresets, // 로딩 상태 전달
             currentItems = items,
+            isLoading = isLoadingPresets, // 수정된 변수를 전달합니다.
             onDismiss = { showPresetDialog = false },
             onAddItem = { itemName ->
                 viewModel.addPresetItem(itemName)
@@ -113,8 +117,8 @@ fun ChecklistDialog(
 @Composable
 private fun PresetDialog(
     presets: Map<String, List<String>>,
-    isLoading: Boolean,
     currentItems: List<ChecklistItem>,
+    isLoading: Boolean, // 로딩 상태를 파라미터로 받습니다.
     onDismiss: () -> Unit,
     onAddItem: (itemName: String) -> Unit
 ) {
@@ -124,26 +128,20 @@ private fun PresetDialog(
         onDismissRequest = onDismiss,
         title = { Text("프리셋 불러오기") },
         text = {
-            // ✅ [수정] 로딩 상태에 따라 다른 UI를 보여주도록 수정
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 200.dp, max = 400.dp), // 다이얼로그 높이 제한
-                contentAlignment = Alignment.Center
-            ) {
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 if (isLoading) {
                     CircularProgressIndicator()
                 } else if (presets.isEmpty()) {
                     Text("불러올 프리셋이 없습니다.")
                 } else {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
                         presets.forEach { (category, items) ->
                             stickyHeader {
                                 Surface(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
                                     val displayName = when (category) {
                                         "basic" -> "기본 준비물"
                                         "cooking" -> "취사 도구"
-                                        "electrical" -> "전기 용품"
+                                        "electrical" -> "전기용품"
                                         "etc" -> "기타"
                                         else -> category
                                     }
@@ -155,6 +153,7 @@ private fun PresetDialog(
                                     )
                                 }
                             }
+
                             items(items) { itemName ->
                                 val isAdded = itemName in currentItemTexts
                                 Row(

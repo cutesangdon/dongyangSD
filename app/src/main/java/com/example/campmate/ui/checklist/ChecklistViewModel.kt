@@ -3,19 +3,25 @@ package com.example.campmate.ui.checklist
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.campmate.data.UserSession
 import com.example.campmate.data.model.ChecklistItem
 import com.example.campmate.data.remote.ApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class ChecklistViewModel @Inject constructor(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val userSession: UserSession
 ) : ViewModel() {
 
     private val _items = MutableStateFlow<List<ChecklistItem>>(emptyList())
@@ -24,66 +30,61 @@ class ChecklistViewModel @Inject constructor(
     private val _presets = MutableStateFlow<Map<String, List<String>>>(emptyMap())
     val presets: StateFlow<Map<String, List<String>>> = _presets.asStateFlow()
 
-    private val _isLoadingPresets = MutableStateFlow(false)
-    val isLoadingPresets: StateFlow<Boolean> = _isLoadingPresets.asStateFlow()
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _errorEvent = MutableSharedFlow<String>()
+    val errorEvent: SharedFlow<String> = _errorEvent.asSharedFlow()
+
+    private var customerId: Long? = null
 
     init {
-        fetchPresets()
-        // TODO: 로그인된 사용자의 체크리스트를 서버에서 불러오는 로직(/api/checklist/getChecklist/{customerId}) 추가 필요
-    }
+        customerId = userSession.getUserId()
 
-    private fun fetchPresets() {
-        viewModelScope.launch {
-            _isLoadingPresets.value = true
-            Log.d("ChecklistViewModel", "프리셋 데이터 로딩 시작...")
-            try {
-                val response = apiService.getChecklistPresets()
-                if (response.isSuccessful && response.body() != null) {
-                    val presetList = response.body()!!
-                    Log.d("ChecklistViewModel", "프리셋 데이터 수신 성공: ${presetList.size}개 아이템")
-
-                    if (presetList.isEmpty()) {
-                        Log.w("ChecklistViewModel", "경고: 서버에서 받은 프리셋 데이터가 비어있습니다. DB를 확인하세요.")
-                    }
-
-                    // ✅✅✅ [핵심 수정] 서버가 보내준 List를 UI에서 사용하기 좋은 Map 형태로 가공합니다. ✅✅✅
-                    _presets.value = presetList
-                        .groupBy(
-                            keySelector = { it.category }, // "basic", "cooking" 등으로 그룹화
-                            valueTransform = { it.itemName } // 각 그룹에는 아이템 이름만 포함
-                        )
-
-                } else {
-                    Log.e("ChecklistViewModel", "프리셋 로딩 실패: 서버 응답 코드 ${response.code()}")
-                }
-            } catch (e: Exception) {
-                Log.e("ChecklistViewModel", "프리셋 로딩 중 네트워크 오류 발생", e)
-            } finally {
-                _isLoadingPresets.value = false
-                Log.d("ChecklistViewModel", "프리셋 데이터 로딩 종료.")
-            }
+        // ✅ [추가] ViewModel 생성 시 customerId를 로그로 출력하여 확인
+        if (customerId == null) {
+            Log.w("ChecklistViewModel", "사용자 ID를 찾을 수 없습니다. 로그인이 필요합니다.")
+        } else {
+            Log.d("ChecklistViewModel", "ViewModel 초기화 완료. 사용자 ID: $customerId")
         }
+
+        fetchPresets()
+        loadChecklist()
     }
 
-    fun addPresetItem(itemName: String) {
-        if (_items.value.any { it.text.equals(itemName, ignoreCase = true) }) {
+    private fun loadChecklist() {
+        // ✅ [수정] id가 null일 경우, 사용자에게 오류 메시지를 보냅니다.
+        val id = customerId
+        if (id == null) {
+            viewModelScope.launch { _errorEvent.emit("사용자 정보를 불러올 수 없습니다. 다시 로그인해주세요.") }
             return
         }
 
         viewModelScope.launch {
+            _isLoading.value = true
             try {
-                // TODO: 실제 로그인된 사용자 ID로 교체해야 합니다. 현재는 1L로 하드코딩.
-                val customerId = 1L
-                val response = apiService.addChecklistItem(customerId, itemName)
-
+                val response = apiService.getChecklist(id)
                 if (response.isSuccessful && response.body() != null) {
-                    val newItemResponse = response.body()!!
-                    val newChecklistItem = ChecklistItem(
-                        id = newItemResponse.id.toInt(),
-                        text = newItemResponse.itemName,
-                        isChecked = newItemResponse.isChecked
-                    )
-                    _items.update { currentList -> currentList + newChecklistItem }
+                    _items.value = response.body()!!.map { dto ->
+                        ChecklistItem(dto.id.toInt(), dto.itemName, dto.isChecked)
+                    }
+                }
+            } catch (e: Exception) {
+                _errorEvent.emit("체크리스트를 불러오는 데 실패했습니다.")
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    // ... (나머지 코드는 이전 답변과 동일합니다)
+    private fun fetchPresets() {
+        viewModelScope.launch {
+            try {
+                val response = apiService.getChecklistPresets()
+                if (response.isSuccessful && response.body() != null) {
+                    _presets.value = response.body()!!
+                        .groupBy(keySelector = { it.category }, valueTransform = { it.itemName })
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -91,27 +92,82 @@ class ChecklistViewModel @Inject constructor(
         }
     }
 
+    fun addPresetItem(itemName: String) {
+        if (_items.value.any { it.text.equals(itemName, ignoreCase = true) }) return
+        addItemToServer(itemName)
+    }
+
     fun addItem(text: String) {
-        // TODO: 서버에 아이템을 추가하는 API(/api/checklist/getAddItem/{customerId}) 호출 로직으로 변경 필요
         if (text.isNotBlank()) {
-            val newItem = ChecklistItem(id = (_items.value.maxOfOrNull { it.id } ?: 0) + 1, text = text)
-            _items.update { currentList -> currentList + newItem }
+            addItemToServer(text)
+        }
+    }
+
+    private fun addItemToServer(itemName: String) {
+        viewModelScope.launch {
+            val id = customerId
+            if (id == null) {
+                _errorEvent.emit("로그인이 필요한 기능입니다.")
+                return@launch
+            }
+
+            try {
+                val response = apiService.addChecklistItem(id, itemName)
+                if (response.isSuccessful && response.body() != null) {
+                    val newItem = response.body()!!
+                    _items.update { list ->
+                        list + ChecklistItem(newItem.id.toInt(), newItem.itemName, newItem.isChecked)
+                    }
+                } else {
+                    _errorEvent.emit("아이템 추가에 실패했습니다. (서버 오류)")
+                }
+            } catch (e: Exception) {
+                _errorEvent.emit("아이템 추가에 실패했습니다. (네트워크 오류)")
+                Log.e("ChecklistViewModel", "아이템 추가 실패", e)
+            }
         }
     }
 
     fun toggleChecked(itemId: Int) {
-        // TODO: 서버에 체크 상태를 업데이트하는 API(/api/checklist/{itemId}) 호출 로직으로 변경 필요
-        _items.update { currentList ->
-            currentList.map { item ->
-                if (item.id == itemId) item.copy(isChecked = !item.isChecked) else item
+        val itemToUpdate = _items.value.find { it.id == itemId } ?: return
+        val newCheckedState = !itemToUpdate.isChecked
+        _items.update { list ->
+            list.map { if (it.id == itemId) it.copy(isChecked = newCheckedState) else it }
+        }
+        viewModelScope.launch {
+            try {
+                val response = apiService.updateChecklistItem(itemId.toLong(), newCheckedState)
+                if (!response.isSuccessful) {
+                    _items.update { list ->
+                        list.map { if (it.id == itemId) it.copy(isChecked = !newCheckedState) else it }
+                    }
+                }
+            } catch (e: Exception) {
+                _items.update { list ->
+                    list.map { if (it.id == itemId) it.copy(isChecked = !newCheckedState) else it }
+                }
+                Log.e("ChecklistViewModel", "체크 상태 업데이트 중 네트워크 오류", e)
             }
         }
     }
 
     fun removeCheckedItems() {
-        // TODO: 서버에서 체크된 아이템을 삭제하는 API(/api/checklist/{itemId}) 호출 로직으로 변경 필요
+        val itemsToRemove = _items.value.filter { it.isChecked }
+        if (itemsToRemove.isEmpty()) return
+        val originalList = _items.value
         _items.update { currentList ->
             currentList.filter { !it.isChecked }
+        }
+        viewModelScope.launch {
+            try {
+                val deleteJobs = itemsToRemove.map { item ->
+                    launch { apiService.deleteChecklistItem(item.id.toLong()) }
+                }
+                deleteJobs.joinAll()
+            } catch (e: Exception) {
+                _items.value = originalList
+                Log.e("ChecklistViewModel", "체크된 아이템 삭제 실패", e)
+            }
         }
     }
 }

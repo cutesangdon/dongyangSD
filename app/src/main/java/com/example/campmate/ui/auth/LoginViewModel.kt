@@ -35,12 +35,10 @@ class LoginViewModel @Inject constructor(
 
                 if (response.isSuccessful && response.body() != null) {
                     val loginResponse = response.body()!!
-                    val token = loginResponse.token
-                    val userId = loginResponse.id
 
-                    tokenManager.saveAuthData(token, userId)
+                    tokenManager.saveAuthData(token = loginResponse.token, userId = loginResponse.id)
 
-                    _loginState.value = LoginUiState.Success(token)
+                    _loginState.value = LoginUiState.Success(loginResponse.token)
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "알 수 없는 에러"
                     _loginState.value = LoginUiState.Error("로그인 실패: ${response.code()} / $errorBody")
