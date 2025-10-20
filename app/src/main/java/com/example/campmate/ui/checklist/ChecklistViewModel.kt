@@ -40,26 +40,17 @@ class ChecklistViewModel @Inject constructor(
 
     init {
         customerId = userSession.getUserId()
-
-        // ✅ [추가] ViewModel 생성 시 customerId를 로그로 출력하여 확인
-        if (customerId == null) {
-            Log.w("ChecklistViewModel", "사용자 ID를 찾을 수 없습니다. 로그인이 필요합니다.")
-        } else {
-            Log.d("ChecklistViewModel", "ViewModel 초기화 완료. 사용자 ID: $customerId")
-        }
-
+        Log.d("ChecklistViewModel", "ViewModel 초기화. Session에서 가져온 User ID: $customerId")
         fetchPresets()
         loadChecklist()
     }
 
     private fun loadChecklist() {
-        // ✅ [수정] id가 null일 경우, 사용자에게 오류 메시지를 보냅니다.
         val id = customerId
-        if (id == null) {
-            viewModelScope.launch { _errorEvent.emit("사용자 정보를 불러올 수 없습니다. 다시 로그인해주세요.") }
+        // ✅ [수정] id가 0 이하일 경우도 유효하지 않은 것으로 간주
+        if (id == null || id <= 0L) {
             return
         }
-
         viewModelScope.launch {
             _isLoading.value = true
             try {
@@ -77,7 +68,6 @@ class ChecklistViewModel @Inject constructor(
         }
     }
 
-    // ... (나머지 코드는 이전 답변과 동일합니다)
     private fun fetchPresets() {
         viewModelScope.launch {
             try {
@@ -106,8 +96,10 @@ class ChecklistViewModel @Inject constructor(
     private fun addItemToServer(itemName: String) {
         viewModelScope.launch {
             val id = customerId
-            if (id == null) {
-                _errorEvent.emit("로그인이 필요한 기능입니다.")
+            // ✅ [수정] ID가 null이거나 0 이하이면 오류 메시지를 보내고 함수를 종료합니다.
+            if (id == null || id <= 0L) {
+                _errorEvent.emit("로그인이 필요하거나 사용자 정보가 올바르지 않습니다.")
+                Log.e("ChecklistViewModel", "addItemToServer 실패: 유효하지 않은 사용자 ID ($id)")
                 return@launch
             }
 
@@ -119,7 +111,7 @@ class ChecklistViewModel @Inject constructor(
                         list + ChecklistItem(newItem.id.toInt(), newItem.itemName, newItem.isChecked)
                     }
                 } else {
-                    _errorEvent.emit("아이템 추가에 실패했습니다. (서버 오류)")
+                    _errorEvent.emit("아이템 추가에 실패했습니다. (서버 오류: ${response.code()})")
                 }
             } catch (e: Exception) {
                 _errorEvent.emit("아이템 추가에 실패했습니다. (네트워크 오류)")
@@ -171,4 +163,3 @@ class ChecklistViewModel @Inject constructor(
         }
     }
 }
-
