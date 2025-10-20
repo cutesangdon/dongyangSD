@@ -10,8 +10,7 @@ class MyPageViewModel @Inject constructor(
     private val tokenManager: TokenManager
 ) : ViewModel() {
 
-    // 로그아웃 시 호출될 함수입니다.
     fun logout() {
-        tokenManager.clearToken()
+        tokenManager.clearAuthData()
     }
 }

@@ -12,6 +12,10 @@ data class LoginRequest(
 
 // 로그인 응답 Body
 data class LoginResponse(
+    @SerializedName("id")
+    val id: Long,
+    @SerializedName("userName")
+    val name: String,
     @SerializedName("token")
     val token: String
 )
