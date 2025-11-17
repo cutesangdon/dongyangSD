@@ -46,7 +46,9 @@ fun MainScreen(
     onNavigateToSearch: () -> Unit,
     onNavigateToMyReviews: () -> Unit,
     onNavigateToWriteReview: (Long, Int, String) -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onNavigateToWritePost: () -> Unit,
+    onNavigateToPostDetail: (Long) -> Unit
 ) {
     val navController = rememberNavController()
     var showChecklistDialog by remember { mutableStateOf(false) }
@@ -109,6 +111,8 @@ fun MainScreen(
             onNavigateToMyReviews = onNavigateToMyReviews,
             onNavigateToWriteReview = onNavigateToWriteReview,
             onLogout = onLogout,
+            onNavigateToWritePost = onNavigateToWritePost,
+            onNavigateToPostDetail = onNavigateToPostDetail,
             modifier = Modifier.padding(innerPadding)
         )
     }
@@ -169,6 +173,8 @@ fun NavigationGraph(
     onNavigateToMyReviews: () -> Unit,
     onNavigateToWriteReview: (Long, Int, String) -> Unit,
     onLogout: () -> Unit,
+    onNavigateToWritePost: () -> Unit,
+    onNavigateToPostDetail: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     NavHost(
@@ -183,7 +189,10 @@ fun NavigationGraph(
             WeatherScreen()
         }
         composable(BottomNavItem.Community.screenRoute) {
-            CommunityScreen()
+            CommunityScreen(
+                onNavigateToWritePost = onNavigateToWritePost,
+                onNavigateToPostDetail = onNavigateToPostDetail
+            )
         }
         composable(BottomNavItem.MyPage.screenRoute) {
             MyPageScreen(

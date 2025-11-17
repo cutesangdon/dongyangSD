@@ -1,5 +1,3 @@
-// Reservation.kt
-
 package com.example.campmate.data.model
 
 data class Reservation(
@@ -9,5 +7,5 @@ data class Reservation(
     val checkOutDate: String,
     val adults: Int,
     val children: Int,
-    val selectedSiteName: String // (추가) 예약한 사이트 이름
+    val selectedSiteName: String
 )

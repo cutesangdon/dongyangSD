@@ -93,4 +93,19 @@ interface ApiService {
         @Query("lon") lon: Double
     ): List<WeatherResponse>
 
+    @GET("/api/community")
+    suspend fun getAllPosts(): Response<List<CommunitySummaryResponse>>
+
+    @GET("/api/community/{postId}")
+    suspend fun getPostDetail(@Path("postId") postId: Long): Response<CommunityDetailResponse>
+
+    @POST("/api/community")
+    suspend fun createPost(@Body request: CommunityPostRequest): Response<Unit>
+
+    @POST("/api/community/{postId}/comments")
+    suspend fun createComment(
+        @Path("postId") postId: Long,
+        @Body request: CommentPostRequest
+    ): Response<CommentResponse>
+
 }

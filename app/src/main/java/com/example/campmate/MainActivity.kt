@@ -15,6 +15,8 @@ import com.example.campmate.data.TokenManager
 import com.example.campmate.ui.MainScreen
 import com.example.campmate.ui.auth.LoginScreen
 import com.example.campmate.ui.auth.SignupScreen
+import com.example.campmate.ui.community.CommunityDetailScreen
+import com.example.campmate.ui.community.WritePostScreen
 import com.example.campmate.ui.detail.CampsiteDetailScreen
 import com.example.campmate.ui.mypage.MyReviewsScreen
 import com.example.campmate.ui.review.WriteReviewScreen
@@ -78,6 +80,12 @@ fun CampMateAppNavHost(startDestination: String) {
                     navController.navigate("login") {
                         popUpTo(navController.graph.id) { inclusive = true }
                     }
+                },
+                onNavigateToWritePost = {
+                    navController.navigate("write_post")
+                },
+                onNavigateToPostDetail = { postId ->
+                    navController.navigate("community_detail/$postId")
                 }
             )
         }
@@ -115,6 +123,16 @@ fun CampMateAppNavHost(startDestination: String) {
         }
         composable("my_reviews") {
             MyReviewsScreen(onNavigateUp = { navController.popBackStack() })
+        }
+        composable("write_post") {
+            WritePostScreen(onNavigateUp = { navController.popBackStack() })
+        }
+
+        composable(
+            route = "community_detail/{postId}",
+            arguments = listOf(navArgument("postId") { type = NavType.LongType })
+        ) {
+            CommunityDetailScreen(onNavigateUp = { navController.popBackStack() })
         }
     }
 }
