@@ -12,6 +12,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -35,37 +36,81 @@ import com.example.campmate.ui.mypage.MyPageScreen
 import com.example.campmate.ui.mypage.ReservationListScreen
 import com.example.campmate.ui.navigation.BottomNavItem
 import com.example.campmate.ui.weather.WeatherScreen
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(
-    onNavigateToDetail: (Int) -> Unit,
+    onNavigateToDetail: (Long) -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToMyReviews: () -> Unit,
-    onNavigateToWriteReview: (Int, String) -> Unit,
+    onNavigateToWriteReview: (Long, Int, String) -> Unit,
     onLogout: () -> Unit
 ) {
     val navController = rememberNavController()
     var showChecklistDialog by remember { mutableStateOf(false) }
-
     Scaffold(
-        bottomBar = { BottomNavigation(navController = navController) },
+        topBar = {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = navBackStackEntry?.destination?.route
+            val showTopBar = currentRoute != "reservation_list" && currentRoute != "my_reviews"
+
+            if (showTopBar) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = "CampMate",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    actions = {
+                        if (currentRoute == BottomNavItem.Home.screenRoute) {
+                            IconButton(onClick = onNavigateToSearch) {
+                                Icon(
+                                    Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    )
+                )
+            }
+        },
+        bottomBar = {
+            BottomNavigation(
+                navController = navController,
+                containerColor = MaterialTheme.colorScheme.primary,
+                selectedColor = MaterialTheme.colorScheme.onPrimary,
+                unselectedColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
+            )
+        },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showChecklistDialog = true }) {
+            // (수정) FloatingActionButton의 색상을 primary/onPrimary로 강제 지정
+            FloatingActionButton(
+                onClick = { showChecklistDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary, // 배경: 어두운 녹색
+                contentColor = MaterialTheme.colorScheme.onPrimary    // 아이콘: 흰색
+            ) {
                 Icon(Icons.Default.Checklist, contentDescription = "Open Checklist")
             }
         }
     ) { innerPadding ->
-        Box(modifier = Modifier.padding(innerPadding)) {
-            NavigationGraph(
-                mainNavController = navController,
-                onNavigateToDetail = onNavigateToDetail,
-                onNavigateToSearch = onNavigateToSearch,
-                onNavigateToMyReviews = onNavigateToMyReviews,
-                onNavigateToWriteReview = onNavigateToWriteReview,
-                onLogout = onLogout
-            )
-        }
+
+        NavigationGraph(
+            mainNavController = navController,
+            onNavigateToDetail = onNavigateToDetail,
+            onNavigateToSearch = onNavigateToSearch,
+            onNavigateToMyReviews = onNavigateToMyReviews,
+            onNavigateToWriteReview = onNavigateToWriteReview,
+            onLogout = onLogout,
+            modifier = Modifier.padding(innerPadding)
+        )
     }
 
     if (showChecklistDialog) {
@@ -74,8 +119,12 @@ fun MainScreen(
 }
 
 @Composable
-fun BottomNavigation(navController: NavHostController) {
-    // ✅ [수정] items 리스트에 날씨와 커뮤니티를 추가합니다.
+fun BottomNavigation(
+    navController: NavHostController,
+    containerColor: Color,
+    selectedColor: Color,
+    unselectedColor: Color
+) {
     val items = listOf(
         BottomNavItem.Home,
         BottomNavItem.Weather,
@@ -85,7 +134,7 @@ fun BottomNavigation(navController: NavHostController) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    NavigationBar {
+    NavigationBar(containerColor = containerColor) {
         items.forEach { item ->
             NavigationBarItem(
                 icon = { Icon(item.icon, contentDescription = stringResource(item.titleId)) },
@@ -99,7 +148,13 @@ fun BottomNavigation(navController: NavHostController) {
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = selectedColor,
+                    selectedTextColor = selectedColor,
+                    unselectedIconColor = unselectedColor,
+                    unselectedTextColor = unselectedColor
+                )
             )
         }
     }
@@ -109,68 +164,43 @@ fun BottomNavigation(navController: NavHostController) {
 @Composable
 fun NavigationGraph(
     mainNavController: NavHostController,
-    onNavigateToDetail: (Int) -> Unit,
+    onNavigateToDetail: (Long) -> Unit,
     onNavigateToSearch: () -> Unit,
     onNavigateToMyReviews: () -> Unit,
-    onNavigateToWriteReview: (Int, String) -> Unit,
-    onLogout: () -> Unit
+    onNavigateToWriteReview: (Long, Int, String) -> Unit,
+    onLogout: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        topBar = {
-            val navBackStackEntry by mainNavController.currentBackStackEntryAsState()
-            val currentRoute = navBackStackEntry?.destination?.route
-            val currentScreen = listOf(
-                BottomNavItem.Home, BottomNavItem.Weather, BottomNavItem.Community, BottomNavItem.MyPage
-            ).find { it.screenRoute == currentRoute }
-
-            if (currentRoute != "reservation_list" && currentRoute != "my_reviews") {
-                TopAppBar(
-                    title = {
-                        Text(text = currentScreen?.titleId?.let { stringResource(it) } ?: "CampMate")
-                    },
-                    actions = {
-                        // 홈 화면에서만 검색 아이콘이 보이도록 수정
-                        if (currentRoute == BottomNavItem.Home.screenRoute) {
-                            IconButton(onClick = onNavigateToSearch) {
-                                Icon(Icons.Default.Search, contentDescription = "Search")
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        titleContentColor = MaterialTheme.colorScheme.primary,
-                    )
-                )
-            }
+    NavHost(
+        navController = mainNavController,
+        startDestination = BottomNavItem.Home.screenRoute,
+        modifier = modifier
+    ) {
+        composable(BottomNavItem.Home.screenRoute) {
+            HomeScreen(onCampsiteClick = onNavigateToDetail)
         }
-    ) { innerPadding ->
-        NavHost(
-            navController = mainNavController,
-            startDestination = BottomNavItem.Home.screenRoute,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(BottomNavItem.Home.screenRoute) {
-                HomeScreen(onCampsiteClick = onNavigateToDetail)
-            }
-            composable(BottomNavItem.Weather.screenRoute) {
-                WeatherScreen()
-            }
-            composable(BottomNavItem.Community.screenRoute) {
-                CommunityScreen()
-            }
-            composable(BottomNavItem.MyPage.screenRoute) {
-                MyPageScreen(
-                    navController = mainNavController,
-                    onNavigateToMyReviews = onNavigateToMyReviews,
-                    onLogout = onLogout
-                )
-            }
-            composable("reservation_list") {
-                ReservationListScreen(
-                    onNavigateToWriteReview = onNavigateToWriteReview,
-                    onNavigateUp = { mainNavController.popBackStack() }
-                )
-            }
+        composable(BottomNavItem.Weather.screenRoute) {
+            WeatherScreen()
+        }
+        composable(BottomNavItem.Community.screenRoute) {
+            CommunityScreen()
+        }
+        composable(BottomNavItem.MyPage.screenRoute) {
+            MyPageScreen(
+                navController = mainNavController,
+                onNavigateToMyReviews = onNavigateToMyReviews,
+                onLogout = onLogout
+            )
+        }
+        composable("reservation_list") {
+            ReservationListScreen(
+                //25.11.10 KM수정 리뷰
+                //onNavigateToWriteReview = onNavigateToWriteReview,
+                onNavigateToWriteReview = { reservationId, campsiteId, campsiteName ->
+                    onNavigateToWriteReview( reservationId, campsiteId, campsiteName)
+                },
+                onNavigateUp = { mainNavController.popBackStack() }
+            )
         }
     }
 }

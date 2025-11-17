@@ -41,6 +41,10 @@ class SignupViewModel @Inject constructor(
     private val _name = MutableStateFlow("")
     val name: StateFlow<String> = _name.asStateFlow()
 
+    // 25.11.16 KM 추가: 전화번호 상태 관리 필드
+    private val _phone = MutableStateFlow("")
+    val phone: StateFlow<String> = _phone.asStateFlow()
+
     private val _style = MutableStateFlow("")
     val style: StateFlow<String> = _style.asStateFlow()
 
@@ -55,6 +59,8 @@ class SignupViewModel @Inject constructor(
     fun onPasswordChange(value: String) { _password.value = value }
     fun onEmailChange(value: String) { _email.value = value }
     fun onNameChange(value: String) { _name.value = value }
+    // 25.11.16 KM 추가: 전화번호 업데이트 함수
+    fun onPhoneChange(value: String) { _phone.value = value }
     fun onStyleChange(value: String) { _style.value = value }
     fun onBackgroundChange(value: String) { _background.value = value }
     fun onTypeChange(value: String) { _type.value = value }
@@ -70,6 +76,8 @@ class SignupViewModel @Inject constructor(
                     pass = _password.value,
                     email = _email.value,
                     name = _name.value,
+                    //25.11.16 KM 추가
+                    phone = _phone.value,
                     style = _style.value,
                     background = _background.value,
                     type = _type.value

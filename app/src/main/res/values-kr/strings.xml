@@ -19,7 +19,8 @@
 
     <string name="mypage_my_reservations">나의 예약 현황</string>
     <string name="mypage_my_reviews">내가 작성한 리뷰</string>
-    <string name="mypage_logout">로그아웃</string> <string name="mypage_no_reservations">예약 내역이 없습니다.</string>
+    <string name="mypage_logout">로그아웃</string>
+    <string name="mypage_no_reservations">예약 내역이 없습니다.</string>
     <string name="check_in">체크인</string>
     <string name="check_out">체크아웃</string>
     <string name="reserved_guests">예약 인원</string>

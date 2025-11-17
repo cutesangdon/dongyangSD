@@ -8,11 +8,13 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class MyReviewsViewModel @Inject constructor(
-    reservationRepository: ReservationRepository
+    //25.11.14 DH 리뷰
+    private val reservationRepository: ReservationRepository
 ) : ViewModel() {
 
     // ✅ [수정됨] Repository의 리뷰 목록을 실시간으로 관찰하도록 코드를 유지합니다.
@@ -23,4 +25,14 @@ class MyReviewsViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
+    //25.11.14 DH 리뷰
+    init {
+        loadMyReviews()
+    }
+
+    private fun loadMyReviews() {
+        viewModelScope.launch {
+            reservationRepository.fetchMyReviews()
+        }
+    }
 }

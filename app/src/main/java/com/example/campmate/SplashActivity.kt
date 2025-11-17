@@ -10,7 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.example.campmate.ui.SplashScreenContent
-import com.example.campmate.ui.theme.CampMateTheme
+import com.example.campmate.ui.theme.CampmateTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -24,7 +24,7 @@ class SplashActivity : ComponentActivity() {
 
         // 2. 스플래시 화면 UI를 설정합니다.
         setContent {
-            CampMateTheme {
+            CampmateTheme {
                 SplashScreenContent()
             }
         }

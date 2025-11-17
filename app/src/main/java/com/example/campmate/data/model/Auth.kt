@@ -34,6 +34,10 @@ data class SignupRequest(
     @SerializedName("nickname")
     val name: String,
 
+    // ✅ 25.11.16 KM 추가: 전화번호 필드
+    @SerializedName("customersPhone")
+    val phone: String,
+
     @SerializedName("customersStyle")
     val style: String,
 

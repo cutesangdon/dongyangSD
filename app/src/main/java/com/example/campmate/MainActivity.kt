@@ -19,7 +19,7 @@ import com.example.campmate.ui.detail.CampsiteDetailScreen
 import com.example.campmate.ui.mypage.MyReviewsScreen
 import com.example.campmate.ui.review.WriteReviewScreen
 import com.example.campmate.ui.search.SearchScreen
-import com.example.campmate.ui.theme.CampMateTheme
+import com.example.campmate.ui.theme.CampmateTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
         val startDestination = if (tokenManager.getToken() != null) "main" else "login"
 
         setContent {
-            CampMateTheme {
+            CampmateTheme {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     CampMateAppNavHost(startDestination = startDestination)
                 }
@@ -70,8 +70,9 @@ fun CampMateAppNavHost(startDestination: String) {
                 onNavigateToMyReviews = {
                     navController.navigate("my_reviews")
                 },
-                onNavigateToWriteReview = { campsiteId, campsiteName ->
-                    navController.navigate("write_review/$campsiteId/$campsiteName")
+                //11.10 KM 수정 리뷰
+                onNavigateToWriteReview = { reservationId: Long, campsiteId: Int, campsiteName: String ->
+                    navController.navigate("write_review/$reservationId/$campsiteId/$campsiteName")
                 },
                 onLogout = {
                     navController.navigate("login") {
@@ -95,15 +96,18 @@ fun CampMateAppNavHost(startDestination: String) {
             )
         }
         composable(
-            route = "write_review/{campsiteId}/{campsiteName}",
+            route = "write_review/{reservationId}/{campsiteId}/{campsiteName}",
             arguments = listOf(
+                navArgument("reservationId") { type = NavType.LongType },
                 navArgument("campsiteId") { type = NavType.IntType },
                 navArgument("campsiteName") { type = NavType.StringType }
             )
         ) { backStackEntry ->
+            val resId = backStackEntry.arguments?.getLong("reservationId") ?: 0L
             val id = backStackEntry.arguments?.getInt("campsiteId") ?: 0
             val name = backStackEntry.arguments?.getString("campsiteName") ?: ""
             WriteReviewScreen(
+                reservationId = resId,
                 campsiteId = id,
                 campsiteName = name,
                 onNavigateUp = { navController.popBackStack() }

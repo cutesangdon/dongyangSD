@@ -44,7 +44,7 @@ import com.example.campmate.data.model.Reservation
 @Composable
 fun ReservationListScreen(
     // ✅ [수정] campsiteName도 함께 전달하도록 변경
-    onNavigateToWriteReview: (campsiteId: Int, campsiteName: String) -> Unit,
+    onNavigateToWriteReview: (reservationId: Long, campsiteId: Int, campsiteName: String) -> Unit,
     onNavigateUp: () -> Unit,
     viewModel: ReservationListViewModel = hiltViewModel()
 ) {
@@ -86,8 +86,8 @@ fun ReservationListScreen(
                     ReservationCard(
                         reservation = reservation,
                         onWriteReviewClick = {
-                            // ✅ [수정] 클릭 시 캠핑장 ID와 이름을 모두 전달
-                            onNavigateToWriteReview(reservation.campsite.id, reservation.campsite.name)
+                            // 11.10 KM 클릭 시 캠핑장 ID와 이름을 모두 전달
+                            onNavigateToWriteReview(reservation.reservationId.toLong(), reservation.campsite.id.toInt(), reservation.campsite.name)
                         }
                     )
                 }

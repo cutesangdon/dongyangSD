@@ -75,6 +75,9 @@ fun SignupStep1(navController: NavController, viewModel: SignupViewModel) {
     val password by viewModel.password.collectAsState()
     val email by viewModel.email.collectAsState()
     val name by viewModel.name.collectAsState()
+    //25.11.16 KM 추가
+    val phone by viewModel.phone.collectAsState()
+
 
     SignupPageLayout(title = "기본 정보 입력 (1/4)", onNext = { navController.navigate("step2") }) {
         OutlinedTextField(value = customerId, onValueChange = viewModel::onCustomerIdChange, label = { Text("아이디") }, modifier = Modifier.fillMaxWidth())
@@ -84,6 +87,17 @@ fun SignupStep1(navController: NavController, viewModel: SignupViewModel) {
         OutlinedTextField(value = email, onValueChange = viewModel::onEmailChange, label = { Text("이메일") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(16.dp))
         OutlinedTextField(value = name, onValueChange = viewModel::onNameChange, label = { Text("닉네임") }, modifier = Modifier.fillMaxWidth())
+
+        //25.11.16 KM 추가
+        Spacer(Modifier.height(16.dp))
+        OutlinedTextField(
+            value = phone,
+            onValueChange = viewModel::onPhoneChange, // 25.11.16 KM 수정
+            label = { Text("전화번호 (예: 01012345678)") },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            modifier = Modifier.fillMaxWidth()
+        )
+
     }
 }
 

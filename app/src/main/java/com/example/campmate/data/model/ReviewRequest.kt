@@ -1,12 +1,15 @@
 package com.example.campmate.data.model
 
 import com.google.gson.annotations.SerializedName
+import java.time.ZoneId
 
 data class ReviewRequest(
-    @SerializedName("campsiteId") val campsiteId: Int,
+    //11.10 수정 KM 리뷰
+    //11.13 수정 DH
+    @SerializedName("camping_zone_id") val campingZoneId: Int,
+    @SerializedName("reservation_id") val reservationId: Long,
+    @SerializedName("customers_Id") val customerId: Long,
     @SerializedName("rating") val rating: Float,
-    @SerializedName("content") val content: String,
-    // TODO: 실제로는 로그인된 사용자 ID와 예약 ID를 보내야 합니다.
-    @SerializedName("customerId") val customerId: Long = 1L, // 임시
-    @SerializedName("reservationId") val reservationId: Long = 1L // 임시
+    // coment -> content로 통일
+    @SerializedName("coment") val content: String
 )

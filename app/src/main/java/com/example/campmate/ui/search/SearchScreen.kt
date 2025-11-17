@@ -32,7 +32,8 @@ import com.example.campmate.ui.home.CampsiteCard
 @Composable
 fun SearchScreen(
     onNavigateUp: () -> Unit,
-    onNavigateToDetail: (Int) -> Unit,
+    // (수정) Int -> Long
+    onNavigateToDetail: (Long) -> Unit,
     viewModel: SearchViewModel = hiltViewModel()
 ) {
     val searchQuery by viewModel.searchQuery.collectAsState()
@@ -81,6 +82,7 @@ fun SearchScreen(
                 items(filteredCampsites) { campsite ->
                     CampsiteCard(
                         campsite = campsite,
+                        // campsite.id가 Long이므로 onNavigateToDetail도 Long을 받아야 함
                         onClick = { onNavigateToDetail(campsite.id) }
                     )
                 }

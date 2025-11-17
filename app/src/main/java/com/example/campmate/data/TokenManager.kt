@@ -26,7 +26,13 @@ class TokenManager @Inject constructor(@ApplicationContext context: Context) {
         return prefs.getString(USER_TOKEN, null)
     }
 
+    /* 11.10 KM 수정 리뷰
     fun getUserId(): Long? {
+        val id = prefs.getLong(USER_ID, -1L)
+        return if (id == -1L) null else id
+    }
+    */
+    fun getUserId(): Long? { // ✅ 함수 이름 변경
         val id = prefs.getLong(USER_ID, -1L)
         return if (id == -1L) null else id
     }
@@ -38,4 +44,3 @@ class TokenManager @Inject constructor(@ApplicationContext context: Context) {
             .apply()
     }
 }
-

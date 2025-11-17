@@ -1,5 +1,9 @@
 package com.example.campmate.ui.review
 
+
+// 25.11.10 KM 추가
+import androidx.compose.runtime.LaunchedEffect // 추가
+import kotlinx.coroutines.flow.collectLatest //추가
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,7 +45,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WriteReviewScreen(
-    campsiteId: Int, // ✅ 이 파라미터는 이미 Int 타입으로 잘 되어 있습니다.
+    // 11.10 KM 수정
+    reservationId: Long, //추가
+    campsiteId: Int,
     campsiteName: String,
     onNavigateUp: () -> Unit,
     viewModel: WriteReviewViewModel = hiltViewModel()
@@ -49,6 +55,18 @@ fun WriteReviewScreen(
     var rating by remember { mutableStateOf(0) }
     var content by remember { mutableStateOf("") }
     val context = LocalContext.current
+
+    // 25.11.10 LaunchedEffect: ViewModel의 submissionResult를 구독하여 API 호출 결과를 기다립니다. 리뷰
+    LaunchedEffect(Unit) {
+        viewModel.submissionResult.collectLatest { success ->
+            if (success) {
+                Toast.makeText(context, "리뷰가 등록되었습니다!", Toast.LENGTH_SHORT).show()
+                onNavigateUp() // ✅ API 성공 후 화면 닫기 (요청 취소 방지)
+            } else {
+                Toast.makeText(context, "리뷰 등록에 실패했습니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -82,7 +100,7 @@ fun WriteReviewScreen(
             Button(
                 onClick = {
                     // ✅ ViewModel의 submitReview 함수를 호출할 때 Int 타입인 campsiteId를 전달합니다.
-                    viewModel.submitReview(campsiteId, rating, content)
+                    viewModel.submitReview(reservationId,campsiteId, rating, content)
                     Toast.makeText(context, "리뷰가 등록되었습니다!", Toast.LENGTH_SHORT).show()
                     onNavigateUp()
                 },
