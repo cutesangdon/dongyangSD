@@ -5,11 +5,13 @@ import com.google.gson.annotations.SerializedName
 data class ChecklistItemResponse(
     @SerializedName("id")
     val id: Long,
-
     @SerializedName("itemName")
     val itemName: String,
-
     @SerializedName("isChecked")
-    val isChecked: Boolean
+    val isChecked: Boolean,
+    @SerializedName("customerId")
+    val customerId: Long,
+    @SerializedName("total")
+    val total: Int
 )
 

@@ -1,40 +1,24 @@
 package com.example.campmate.ui.checklist
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.campmate.data.model.ChecklistItem
+import kotlinx.coroutines.flow.collectLatest
 
 /**
  * 체크리스트 전체를 보여주고 관리하는 다이얼로그 Composable
@@ -48,11 +32,14 @@ fun ChecklistDialog(
     val presets by viewModel.presets.collectAsState()
     var showAddItemDialog by remember { mutableStateOf(false) }
     var showPresetDialog by remember { mutableStateOf(false) }
-
-    // ✅✅✅ [해결] 이전에 오류가 발생했던 부분입니다. ✅✅✅
-    // viewModel.isLoadingPresets -> viewModel.isLoading 으로 수정합니다.
     val isLoadingPresets by viewModel.isLoading.collectAsState()
 
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        viewModel.errorEvent.collectLatest { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+        }
+    }
 
     if (showAddItemDialog) {
         AddItemDialog(
@@ -68,7 +55,7 @@ fun ChecklistDialog(
         PresetDialog(
             presets = presets,
             currentItems = items,
-            isLoading = isLoadingPresets, // 수정된 변수를 전달합니다.
+            isLoading = isLoadingPresets,
             onDismiss = { showPresetDialog = false },
             onAddItem = { itemName ->
                 viewModel.addPresetItem(itemName)
@@ -85,9 +72,11 @@ fun ChecklistDialog(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(items) { item ->
+                    // ✅ [수정] 개수 변경 콜백을 ViewModel과 연결
                     ChecklistItemRow(
                         item = item,
-                        onCheckedChange = { viewModel.toggleChecked(item.id) }
+                        onCheckedChange = { viewModel.toggleChecked(item.id) },
+                        onQuantityChange = { change -> viewModel.updateItemQuantity(item.id, change) }
                     )
                 }
             }
@@ -118,7 +107,7 @@ fun ChecklistDialog(
 private fun PresetDialog(
     presets: Map<String, List<String>>,
     currentItems: List<ChecklistItem>,
-    isLoading: Boolean, // 로딩 상태를 파라미터로 받습니다.
+    isLoading: Boolean,
     onDismiss: () -> Unit,
     onAddItem: (itemName: String) -> Unit
 ) {
@@ -218,10 +207,12 @@ private fun AddItemDialog(
     )
 }
 
+
 @Composable
 private fun ChecklistItemRow(
     item: ChecklistItem,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    onQuantityChange: (Int) -> Unit // -1 또는 1 값을 받는 콜백
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -231,8 +222,17 @@ private fun ChecklistItemRow(
             checked = item.isChecked,
             onCheckedChange = onCheckedChange
         )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(text = item.text, style = MaterialTheme.typography.bodyLarge)
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(text = item.text, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            IconButton(onClick = { onQuantityChange(-1) }, enabled = item.total > 1) {
+                Icon(Icons.Default.Remove, contentDescription = "수량 감소")
+            }
+            Text(text = "${item.total}", style = MaterialTheme.typography.bodyLarge)
+            IconButton(onClick = { onQuantityChange(1) }) {
+                Icon(Icons.Default.Add, contentDescription = "수량 증가")
+            }
+        }
     }
 }
-

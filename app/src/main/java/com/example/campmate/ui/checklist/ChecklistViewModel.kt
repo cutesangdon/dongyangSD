@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campmate.data.UserSession
 import com.example.campmate.data.model.ChecklistItem
+import com.example.campmate.data.model.ChecklistPresetItem
 import com.example.campmate.data.remote.ApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -47,7 +48,6 @@ class ChecklistViewModel @Inject constructor(
 
     private fun loadChecklist() {
         val id = customerId
-        // ✅ [수정] id가 0 이하일 경우도 유효하지 않은 것으로 간주
         if (id == null || id <= 0L) {
             return
         }
@@ -56,8 +56,9 @@ class ChecklistViewModel @Inject constructor(
             try {
                 val response = apiService.getChecklist(id)
                 if (response.isSuccessful && response.body() != null) {
+                    // ✅ [수정] total 필드를 포함하여 매핑
                     _items.value = response.body()!!.map { dto ->
-                        ChecklistItem(dto.id.toInt(), dto.itemName, dto.isChecked)
+                        ChecklistItem(dto.id.toInt(), dto.itemName, dto.isChecked, dto.total)
                     }
                 }
             } catch (e: Exception) {
@@ -71,7 +72,7 @@ class ChecklistViewModel @Inject constructor(
     private fun fetchPresets() {
         viewModelScope.launch {
             try {
-                val response = apiService.getChecklistPresets()
+                val response: retrofit2.Response<List<ChecklistPresetItem>> = apiService.getChecklistPresets()
                 if (response.isSuccessful && response.body() != null) {
                     _presets.value = response.body()!!
                         .groupBy(keySelector = { it.category }, valueTransform = { it.itemName })
@@ -96,7 +97,6 @@ class ChecklistViewModel @Inject constructor(
     private fun addItemToServer(itemName: String) {
         viewModelScope.launch {
             val id = customerId
-            // ✅ [수정] ID가 null이거나 0 이하이면 오류 메시지를 보내고 함수를 종료합니다.
             if (id == null || id <= 0L) {
                 _errorEvent.emit("로그인이 필요하거나 사용자 정보가 올바르지 않습니다.")
                 Log.e("ChecklistViewModel", "addItemToServer 실패: 유효하지 않은 사용자 ID ($id)")
@@ -107,8 +107,9 @@ class ChecklistViewModel @Inject constructor(
                 val response = apiService.addChecklistItem(id, itemName)
                 if (response.isSuccessful && response.body() != null) {
                     val newItem = response.body()!!
+                    // ✅ [수정] total 필드를 포함하여 아이템 생성
                     _items.update { list ->
-                        list + ChecklistItem(newItem.id.toInt(), newItem.itemName, newItem.isChecked)
+                        list + ChecklistItem(newItem.id.toInt(), newItem.itemName, newItem.isChecked, newItem.total)
                     }
                 } else {
                     _errorEvent.emit("아이템 추가에 실패했습니다. (서버 오류: ${response.code()})")
@@ -139,6 +140,38 @@ class ChecklistViewModel @Inject constructor(
                     list.map { if (it.id == itemId) it.copy(isChecked = !newCheckedState) else it }
                 }
                 Log.e("ChecklistViewModel", "체크 상태 업데이트 중 네트워크 오류", e)
+            }
+        }
+    }
+
+    fun updateItemQuantity(itemId: Int, change: Int) {
+        val itemToUpdate = _items.value.find { it.id == itemId } ?: return
+        val newQuantity = itemToUpdate.total + change
+
+        if (newQuantity < 1) return // 개수는 1 미만이 될 수 없음
+
+        // 1. UI를 즉시 업데이트
+        _items.update { list ->
+            list.map { if (it.id == itemId) it.copy(total = newQuantity) else it }
+        }
+
+        // 2. 서버에 변경 사항을 비동기적으로 전송
+        viewModelScope.launch {
+            try {
+                val response = apiService.updateItemQuantity(itemId.toLong(), newQuantity)
+                if (!response.isSuccessful) {
+                    // 3. 서버 업데이트 실패 시, UI를 원래 상태로 되돌림
+                    _items.update { list ->
+                        list.map { if (it.id == itemId) it.copy(total = itemToUpdate.total) else it }
+                    }
+                    _errorEvent.emit("개수 업데이트에 실패했습니다.")
+                }
+            } catch (e: Exception) {
+                // 4. 네트워크 오류 시에도 UI를 원래 상태로 되돌림
+                _items.update { list ->
+                    list.map { if (it.id == itemId) it.copy(total = itemToUpdate.total) else it }
+                }
+                _errorEvent.emit("네트워크 오류로 개수 업데이트에 실패했습니다.")
             }
         }
     }
